@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  proxy:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - proxy_net
+
+  app_service:
+    image: my-app-image # 실제 애플리케이션 이미지
+    networks:
+      - proxy_net
+
+networks:
+  proxy_net:
+    driver: bridge
