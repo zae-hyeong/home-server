@@ -6,5 +6,13 @@
     "destinationUrl": "http://nextjs-app:3000",
     "active": true,
     "description": "개인 자산 포트폴리오 서비스 (Next.js)"
+  },
+  {
+    "id": "2",
+    "name": "Finance Portfolio (Dash)",
+    "sourceHost": "finance.zae-hyeong.cloud",
+    "destinationUrl": "http://nextjs-app:3000",
+    "active": true,
+    "description": "개인 자산 포트폴리오 서비스 (Next.js - 대시 도메인)"
   }
 ]

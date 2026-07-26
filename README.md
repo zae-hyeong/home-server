@@ -91,36 +91,54 @@ homeserver/
 이 홈 서버 시스템을 안정적으로 초기화하고 실행하는 순서입니다.
 
 ### Step 1. 외부 공유 네트워크 생성
-가장 먼저 공유 네트워크인 `homeserver-net`을 호스트 터미널에서 생성합니다.
+가장 먼저 컨테이너 간의 통신을 돕는 외부 공유 네트워크인 `homeserver-net`을 호스트 터미널에서 생성합니다.
 ```bash
 docker network create homeserver-net
 ```
 
 ### Step 2. PostgreSQL 데이터베이스 기동
 1. `DB/` 폴더로 이동합니다.
-2. `.env.example`을 참고하여 `.env` 파일을 생성하고 패스워드 정보를 입력합니다.
-3. 서비스를 백그라운드로 실행합니다.
+2. `.env.example`을 복사하여 `.env` 파일을 생성하고 패스워드 정보를 설정합니다.
+3. 데이터베이스 서비스를 백그라운드로 실행합니다.
    ```bash
+   # DB 폴더 내에서 실행
    docker compose up -d
    ```
 
 ### Step 3. Finance Portfolio 애플리케이션 실행
 1. `finance-portfolio/` 폴더로 이동합니다.
-2. `.env.example`을 참고하여 `.env` 파일을 작성합니다. (`DB_HOST=postgres-db`로 지정해야 도커 네트워크 안에서 올바르게 연결됩니다.)
-3. 애플리케이션을 빌드 및 구동합니다.
+2. `.env.example`을 복사하여 `.env` 파일을 작성합니다.
+   * `DB_HOST`는 반드시 `postgres-db`로 설정하여 도커 네트워크 내에서 DB를 찾아갈 수 있도록 합니다.
+3. 애플리케이션을 기동합니다.
    ```bash
+   # finance-portfolio 폴더 내에서 실행
    docker compose up -d
    ```
 
-### Step 4. Reverse Proxy 구동 및 SSL 설정
+### Step 4. 로컬 테스트를 위한 호스트 설정 (개발 환경인 경우)
+로컬 PC에서 `finance.zae-hyeong.cloud` 및 `error.zae-hyeong.cloud` 도메인으로 리버스 프록시 접속을 테스트하기 위해 OS별 `hosts` 파일을 수정해야 합니다.
+
+* **Windows**: `C:\Windows\System32\drivers\etc\hosts` 파일을 관리자 권한으로 열고 맨 아래에 아래 줄을 추가합니다.
+* **macOS / Linux**: `/etc/hosts` 파일을 `sudo` 권한으로 열고 추가합니다.
+```text
+127.0.0.1 finance.zae-hyeong.cloud
+127.0.0.1 error.zae-hyeong.cloud
+```
+
+### Step 5. Reverse Proxy 구동 및 SSL 설정
 1. `reverse-proxy/` 폴더로 이동합니다.
-2. 초기 구동 시 Let's Encrypt 인증서가 없는 상태라면 Nginx가 에러로 실행되지 않을 수 있습니다. 
-   - 최초 실행 시에는 self-signed 임시 인증서를 설정하거나 `certbot`을 통해 인증서를 먼저 발급받은 뒤 실행해야 합니다.
-3. 프록시 및 인증 갱신 데몬을 기동합니다.
+2. **초기 구동 시 주의사항 (SSL)**:
+   * Nginx 설정 파일(`nginx.conf`)에 SSL 인증서 경로가 활성화되어 있는 상태에서, 실제 Let's Encrypt 인증서 파일이 존재하지 않는다면 Nginx가 오류로 인해 실행되지 않습니다.
+   * 로컬에서 인증서 없이 단순히 포워딩 기능만 테스트하고 싶은 경우, `nginx.conf`의 **3. HTTPS 통합 바이패스** 부분을 주석 처리하고 사용하시거나, 최초 1회 `certbot`을 통해 인증서를 실제로 발급받아야 합니다.
+3. 프록시 및 인증서 갱신 데몬을 기동합니다.
    ```bash
+   # reverse-proxy 폴더 내에서 실행
    docker compose up -d
    ```
-4. 이제 `routes.json`에 기재된 `portfolio.zaehyeong.cloud` 도메인을 통해 HTTPS(`https://portfolio.zaehyeong.cloud`)로 안전하게 Finance Portfolio 서비스에 접속할 수 있습니다.
+4. 이제 다음 주소들로 접속하여 결과를 확인합니다:
+   * **자산 포트폴리오**: `http://finance.zae-hyeong.cloud` (인증서 설정 완료 시 HTTPS로 자동 리디렉션)
+   * **테스트 에러 페이지**: `http://error.zae-hyeong.cloud` (정적 500 에러 페이지 반환 확인)
+   * **프록시 관리자 대시보드 (HTTP 전용)**: `http://localhost` 또는 `http://127.0.0.1`
 
 ---
 

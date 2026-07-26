@@ -65,6 +65,20 @@ app.prepare().then(() => {
     const rawHost = req.headers.host || '';
     const host = rawHost.split(':')[0]; // 포트 제거 (예: portfolio.zaehyeong.cloud:3000 -> portfolio.zaehyeong.cloud)
     
+    // 테스트 에러 페이지 호스트 가로채기
+    if (host === 'error.zae-hyeong.cloud' || host === 'error.zaehyeong.cloud') {
+      const errorPagePath = path.join(__dirname, 'public', 'error.html');
+      return fs.readFile(errorPagePath, 'utf8', (err, htmlContent) => {
+        if (err) {
+          console.error('Error reading static error page:', err);
+          res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' });
+          return res.end('<h1>Internal Server Error (Static Error Page Missing)</h1>');
+        }
+        res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' });
+        return res.end(htmlContent);
+      });
+    }
+
     // API 요청이나 내부 _next 정적 자원은 관리자용이므로 프록시를 태우지 않고 바로 Next.js로 보냄
     const isNextInternal = req.url.startsWith('/_next') || req.url.startsWith('/api/routes');
     
